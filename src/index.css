@@ -1,0 +1,113 @@
+:root {
+  /* Core Colors - Dark Tech Theme */
+  --color-bg-dark: #050510;       /* Very Deep Blue/Black */
+  --color-bg-card: #0c0c1d;       /* Slightly Lighter Card BG */
+  --color-bg-nav: #0a0a18;        /* Navbar */
+  
+  --color-primary: #00f0ff;       /* Neon Cyan */
+  --color-secondary: #7000ff;     /* Neon Purple */
+  --color-accent: #ff0055;        /* Neon Pink (Alerts) */
+  --color-success: #00ff9d;       /* Success Green */
+  --color-text-main: #ffffff;     /* Pure White */
+  --color-text-muted: #8b8b9b;    /* Greyed Text */
+  --color-border: #1f1f33;        /* Subtle Border */
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --gradient-glass: linear-gradient(180deg, rgba(20, 20, 40, 0.7) 0%, rgba(10, 10, 20, 0.4) 100%);
+  
+  /* Spacing & Layout */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 48px;
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glass-panel {
+  background: rgba(15, 15, 30, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: inherit;
+}
+
+input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px var(--color-primary); }
+  50% { box-shadow: 0 0 20px var(--color-primary); }
+  100% { box-shadow: 0 0 5px var(--color-primary); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
