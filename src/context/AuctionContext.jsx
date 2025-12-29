@@ -3,19 +3,15 @@ import React, { createContext, useReducer, useContext, useEffect } from 'react';
 // --- INITIAL STATE ---
 const initialState = {
   appStatus: 'WAITING', // WAITING, READY, AUCTION, COMPLETED, CODING, FINISHED
-  user: {
-    id: 'team_alpha',
-    name: 'Team Alpha',
-    wallet: 100,
-    purchasedProblems: []
-  },
+  user: null, // User starts as null until login
   auction: {
     currentProblemIndex: -1,
     currentProblem: null,
     highestBid: 0,
     highestBidder: null,
     timeLeft: 0,
-    isPaused: false
+    isPaused: false,
+    codingTimer: 0 // In seconds
   },
   problems: [
     {
@@ -64,7 +60,9 @@ const ACTIONS = {
   END_PROBLEM: 'END_PROBLEM',
   START_CODING: 'START_CODING',
   SOLVE_PROBLEM: 'SOLVE_PROBLEM',
-  ADD_MESSAGE: 'ADD_MESSAGE'
+  ADD_MESSAGE: 'ADD_MESSAGE',
+  LOGIN: 'LOGIN',
+  END_EVENT: 'END_EVENT'
 };
 
 // --- REDUCER ---
@@ -72,6 +70,21 @@ function auctionReducer(state, action) {
   switch (action.type) {
     case ACTIONS.SET_STATUS:
       return { ...state, appStatus: action.payload };
+
+    case ACTIONS.END_EVENT:
+      return { ...state, appStatus: 'FINISHED' };
+
+    case ACTIONS.LOGIN:
+      return {
+        ...state,
+        user: {
+          id: action.payload.name.toLowerCase().replace(/\s+/g, '_'),
+          name: action.payload.name,
+          wallet: 100,
+          score: 0,
+          purchasedProblems: []
+        }
+      };
 
     case ACTIONS.START_AUCTION:
       return {
@@ -109,7 +122,8 @@ function auctionReducer(state, action) {
       if (amount <= state.auction.highestBid) return state;
 
       const newMessages = [...state.messages];
-      if (bidder === state.user.name) {
+      // Admin might not have a user logged in, so check state.user first
+      if (state.user && bidder === state.user.name) {
         newMessages.push({ id: Date.now(), text: `You bid ${amount} coins`, type: 'action' });
       } else {
         newMessages.push({ id: Date.now(), text: `${bidder} bid ${amount} coins`, type: 'alert' });
@@ -126,6 +140,15 @@ function auctionReducer(state, action) {
       };
 
     case ACTIONS.TICK:
+      if (state.appStatus === 'CODING') {
+        return {
+          ...state,
+          auction: {
+            ...state.auction,
+            codingTimer: state.auction.codingTimer - 1
+          }
+        };
+      }
       return {
         ...state,
         auction: {
@@ -141,8 +164,8 @@ function auctionReducer(state, action) {
         : `Problem unsold.`;
 
       // Update logic if current user won
-      let updatedUser = { ...state.user };
-      if (highestBidder === state.user.name) {
+      let updatedUser = state.user ? { ...state.user } : null;
+      if (updatedUser && highestBidder === updatedUser.name) {
         updatedUser.wallet -= highestBid;
         updatedUser.purchasedProblems = [...updatedUser.purchasedProblems, currentProblem];
       }
@@ -155,17 +178,30 @@ function auctionReducer(state, action) {
 
     case ACTIONS.SOLVE_PROBLEM:
       const { problemId } = action.payload;
+      // Find problem to get basePoints
+      const solvedProblem = state.problems.find(p => p.id === problemId);
+      const points = solvedProblem ? solvedProblem.basePoints : 0;
+
       const updatedPurchases = state.user.purchasedProblems.map(p =>
         p.id === problemId ? { ...p, status: 'SOLVED' } : p
       );
+
       return {
         ...state,
-        user: { ...state.user, purchasedProblems: updatedPurchases },
-        messages: [...state.messages, { id: Date.now(), text: `Problem #${problemId} Solved!`, type: 'success' }]
+        user: {
+          ...state.user,
+          purchasedProblems: updatedPurchases,
+          score: (state.user.score || 0) + points
+        },
+        messages: [...state.messages, { id: Date.now(), text: `Problem #${problemId} Solved! (+${points} pts)`, type: 'success' }]
       };
 
     case ACTIONS.START_CODING:
-      return { ...state, appStatus: 'CODING' };
+      return {
+        ...state,
+        appStatus: 'CODING',
+        auction: { ...state.auction, codingTimer: 60 * 60 } // 60 minutes
+      };
 
     case 'SKIP_TO_CODING':
       return {
@@ -203,52 +239,68 @@ export const AuctionProvider = ({ children }) => {
       setTimeout(() => {
         dispatch({ type: ACTIONS.NEXT_PROBLEM });
       }, 5000); // 5s gap
+    } else if (state.appStatus === 'CODING' && state.auction.codingTimer > 0) {
+      // Coding Phase Timer
+      timer = setInterval(() => {
+        dispatch({ type: ACTIONS.TICK });
+      }, 1000);
     }
-    return () => clearInterval(timer);
-  }, [state.appStatus, state.auction.timeLeft]);
 
-  // Admin Actions (Simulated)
+    return () => clearInterval(timer);
+  }, [state.appStatus, state.auction.timeLeft, state.auction.codingTimer]);
+
+  // --- BROADCAST CHANNEL (Cross-Tab Sync) ---
+  useEffect(() => {
+    const channel = new BroadcastChannel('codebid_sync');
+
+    channel.onmessage = (event) => {
+      // Receive action from other tab
+      console.log('Received sync action:', event.data);
+      dispatch(event.data);
+    };
+
+    return () => channel.close();
+  }, []);
+
+  // Helper to dispatch locally AND broadcast
+  const broadcastAction = (action) => {
+    dispatch(action);
+    const channel = new BroadcastChannel('codebid_sync');
+    channel.postMessage(action);
+    channel.close();
+  };
+
+  // Admin Actions (Synced)
   const adminStartAuction = () => {
-    dispatch({ type: ACTIONS.START_AUCTION });
+    // We only broadcast the initial trigger. The consequent timeouts happen locally on both.
+    broadcastAction({ type: ACTIONS.START_AUCTION });
+
+    // Note: In a real app, 'NEXT_PROBLEM' should also be synced or driven by server time
+    // Here we rely on both clients running the timeout logic roughly in sync.
     setTimeout(() => {
-      dispatch({ type: ACTIONS.NEXT_PROBLEM });
-    }, 3000); // Start first problem after 3s ready state
+      broadcastAction({ type: ACTIONS.NEXT_PROBLEM }); // Broadcast this too!
+    }, 3000);
   };
 
   const placeBid = (amount) => {
     if (state.appStatus !== 'AUCTION') return;
-    if (amount > state.user.wallet) return; // Client side check
+    if (amount > state.user.wallet) return;
     if (amount <= state.auction.highestBid) return;
 
-    dispatch({ type: ACTIONS.PLACE_BID, payload: { amount, bidder: state.user.name } });
+    // Bids should ideally be synced too so everyone sees the new highest bid
+    const action = { type: ACTIONS.PLACE_BID, payload: { amount, bidder: state.user.name } };
+    broadcastAction(action);
   };
-
-  // Simulate Opponent Bids
-  useEffect(() => {
-    if (state.appStatus === 'AUCTION' && state.auction.timeLeft > 5) {
-      // Random chance for opponent to bid
-      const randomBid = Math.random();
-      if (randomBid > 0.7) {
-        const opponentBid = state.auction.highestBid + Math.floor(Math.random() * 5) + 1;
-        // Make sure opponent doesn't bid if it's too high? Na strictly increasing.
-        // Just a basic simulation
-        setTimeout(() => {
-          dispatch({
-            type: ACTIONS.PLACE_BID,
-            payload: { amount: opponentBid, bidder: 'Team Beta' }
-          });
-        }, Math.random() * 2000);
-      }
-    }
-  }, [state.auction.highestBid, state.appStatus]);
 
   const value = {
     state,
     adminStartAuction,
     placeBid,
     solveProblem: (problemId) => dispatch({ type: ACTIONS.SOLVE_PROBLEM, payload: { problemId } }),
-    startCoding: () => dispatch({ type: ACTIONS.START_CODING }),
-    skipToCoding: () => dispatch({ type: 'SKIP_TO_CODING' })
+    startCoding: () => broadcastAction({ type: ACTIONS.START_CODING }), // Synced
+    skipToCoding: () => dispatch({ type: 'SKIP_TO_CODING' }),
+    login: (name) => dispatch({ type: ACTIONS.LOGIN, payload: { name } }),
+    endEvent: () => broadcastAction({ type: ACTIONS.END_EVENT }) // Synced
   };
 
   return (

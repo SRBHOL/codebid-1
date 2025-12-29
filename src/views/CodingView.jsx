@@ -9,6 +9,8 @@ const CodingView = () => {
     const [output, setOutput] = useState('');
     const [isRunning, setIsRunning] = useState(false);
 
+    if (!user) return <div className="flex-center" style={{ height: '100vh' }}>Error: User not logged in.</div>;
+
     useEffect(() => {
         if (activeProblem) {
             setCode(activeProblem.starterCode || '# Write your code here');
@@ -33,35 +35,70 @@ const CodingView = () => {
 
     // --- DASHBOARD VIEW (NO ACTIVE PROBLEM) ---
     if (!activeProblem) {
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        };
+
         return (
-            <div className="container" style={{ padding: '2rem 0' }}>
-                <h1 className="text-gradient" style={{ marginBottom: '2rem' }}>CODING PHASE</h1>
+            <div className="container" style={{ padding: '2rem 1rem' }}>
+                <header className="flex-center" style={{ justifyContent: 'space-between', marginBottom: '2rem' }}>
+                    <h1 className="text-gradient">CODING PHASE</h1>
+                    <div className="glass-panel" style={{ padding: '0.5rem 1.5rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>TIME REMAINING</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: state.auction.codingTimer < 300 ? 'var(--color-accent)' : 'var(--color-primary)' }}>
+                                {formatTime(state.auction.codingTimer)}
+                            </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>SCORE</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{user.score || 0}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>WALLET</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-success)' }}>{user.wallet}</div>
+                        </div>
+                    </div>
+                </header>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
                     {user.purchasedProblems.length === 0 ? (
-                        <div className="glass-panel" style={{ padding: '2rem', gridColumn: '1 / -1', textAlign: 'center' }}>
-                            <h2>No Problems Purchased</h2>
-                            <p style={{ color: 'var(--color-text-muted)' }}>You didn't win any auctions. Better luck next time!</p>
+                        <div className="glass-panel" style={{ padding: '3rem', gridColumn: '1 / -1', textAlign: 'center' }}>
+                            <h2 style={{ marginBottom: '1rem' }}>No Problems Purchased</h2>
+                            <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>You didn't win any auctions. Better luck next time!</p>
+                            <div style={{ fontSize: '3rem' }}>👾</div>
                         </div>
                     ) : (
                         user.purchasedProblems.map(problem => (
                             <div key={problem.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: problem.status === 'SOLVED' ? '1px solid var(--color-success)' : '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>#{problem.id}</span>
-                                    <span style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>{problem.difficulty}</span>
+                                    <span style={{
+                                        fontSize: '0.8rem',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        background: 'rgba(255,255,255,0.1)',
+                                        color: problem.difficulty === 'Hard' ? 'var(--color-accent)' : 'var(--color-success)'
+                                    }}>
+                                        {problem.difficulty}
+                                    </span>
                                 </div>
-                                <h3>{problem.title}</h3>
+                                <h3 style={{ fontSize: '1.4rem' }}>{problem.title}</h3>
                                 {problem.status === 'SOLVED' && <div style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>✓ SOLVED</div>}
                                 <button
                                     onClick={() => setActiveProblem(problem)}
                                     style={{
                                         marginTop: 'auto',
                                         width: '100%',
-                                        padding: '0.8rem',
+                                        padding: '1rem',
                                         background: problem.status === 'SOLVED' ? 'var(--color-bg-card)' : 'var(--color-secondary)',
                                         border: problem.status === 'SOLVED' ? '1px solid var(--color-success)' : 'none',
-                                        color: '#fff',
-                                        borderRadius: 'var(--radius-sm)'
+                                        color: problem.status === 'SOLVED' ? 'var(--color-success)' : '#fff',
+                                        fontWeight: 'bold',
+                                        borderRadius: 'var(--radius-sm)',
+                                        cursor: 'pointer'
                                     }}
                                 >
                                     {problem.status === 'SOLVED' ? 'REVIEW SOLUTION' : 'OPEN EDITOR'}

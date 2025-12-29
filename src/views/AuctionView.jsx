@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuction } from '../context/AuctionContext';
 
 const AuctionView = () => {
-    const { state, placeBid } = useAuction();
+    const { state, placeBid, startCoding } = useAuction();
     const { auction, user, messages } = state;
     const { currentProblem } = auction;
     const [bidAmount, setBidAmount] = useState('');
@@ -19,6 +19,19 @@ const AuctionView = () => {
         const msgContainer = document.getElementById('message-log');
         if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
     }, [messages]);
+
+    // If all problems are done (COMPLETED), show Admin control to start coding
+    if (state.appStatus === 'COMPLETED') {
+        return (
+            <div className="container flex-center" style={{ flexDirection: 'column', height: '100vh', textAlign: 'center' }}>
+                <h1 className="text-gradient" style={{ fontSize: '3rem', marginBottom: '1rem' }}>AUCTION COMPLETED</h1>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '1.2rem', marginBottom: '2rem' }}>
+                    All problems have been auctioned.<br />
+                    Prepare for the Coding Phase.
+                </p>
+            </div>
+        );
+    }
 
     if (!currentProblem) return <div className="flex-center" style={{ height: '100vh' }}>Loading Problem...</div>;
 

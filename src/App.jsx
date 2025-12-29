@@ -1,20 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AuctionProvider, useAuction } from './context/AuctionContext';
 
 // Components
 import LoginView from './views/LoginView';
 import AuctionView from './views/AuctionView';
 import CodingView from './views/CodingView';
-// DashboardView import removed
+import LeaderboardView from './views/LeaderboardView';
+import LandingView from './views/LandingView';
+import AdminDashboard from './views/AdminDashboard';
 
-// Placeholder components for now
-const LoginReview = () => <div className="p-10 text-center"><h1>Login Screen</h1></div>;
-
-function AppContent() {
+function AppContent({ viewMode, setViewMode }) {
   const { state } = useAuction();
 
-  // Simple Router based on appStatus
-  const renderView = () => {
+  if (viewMode === 'LANDING') {
+    return <LandingView onSelectRole={setViewMode} />;
+  }
+
+  if (viewMode === 'ADMIN') {
+    return <AdminDashboard onBack={() => setViewMode('LANDING')} />;
+  }
+
+  // STUDENT VIEW ROUTER
+  const renderStudentView = () => {
     switch (state.appStatus) {
       case 'WAITING':
         return <LoginView />;
@@ -25,10 +32,12 @@ function AppContent() {
       case 'COMPLETED':
         return <div className="flex-center" style={{ height: '100vh', flexDirection: 'column' }}>
           <h1>Auction Complete!</h1>
-          <p>Prepare for Coding Phase...</p>
+          <p>Waiting for Admin to start Coding Phase...</p>
         </div>;
       case 'CODING':
         return <CodingView />;
+      case 'FINISHED':
+        return <LeaderboardView />;
       default:
         return <LoginView />;
     }
@@ -36,16 +45,28 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      {renderView()}
+      {renderStudentView()}
+      <button
+        onClick={() => setViewMode('LANDING')}
+        style={{ position: 'fixed', bottom: '10px', left: '10px', opacity: 0.3, background: 'transparent', color: '#fff' }}
+      >
+        Exit
+      </button>
     </div>
   );
 }
 
+import ErrorBoundary from './ErrorBoundary';
+
 function App() {
+  const [viewMode, setViewMode] = useState('LANDING'); // LANDING, STUDENT, ADMIN
+
   return (
-    <AuctionProvider>
-      <AppContent />
-    </AuctionProvider>
+    <ErrorBoundary>
+      <AuctionProvider>
+        <AppContent viewMode={viewMode} setViewMode={setViewMode} />
+      </AuctionProvider>
+    </ErrorBoundary>
   );
 }
 
