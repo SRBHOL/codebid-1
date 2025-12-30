@@ -8,12 +8,17 @@ import CodingView from './views/CodingView';
 import LeaderboardView from './views/LeaderboardView';
 import LandingView from './views/LandingView';
 import AdminDashboard from './views/AdminDashboard';
+import RulesView from './views/RulesView';
 
 function AppContent({ viewMode, setViewMode }) {
   const { state } = useAuction();
 
   if (viewMode === 'LANDING') {
     return <LandingView onSelectRole={setViewMode} />;
+  }
+
+  if (viewMode === 'RULES') {
+    return <RulesView onBack={() => setViewMode('LANDING')} />;
   }
 
   if (viewMode === 'ADMIN') {

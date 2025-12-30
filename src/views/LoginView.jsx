@@ -20,37 +20,34 @@ const LoginView = () => {
         return (
             <div className="container flex-center" style={{ minHeight: '100vh', flexDirection: 'column' }}>
                 <div className="glass-panel" style={{ padding: '3rem', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-                    <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>CODEBID</h1>
-                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>Enter the arena</p>
+                    <h1 className="text-hero" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>CODEBID</h1>
+                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', letterSpacing: '0.1em' }}>ENTER THE ARENA</p>
 
-                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <input
                             type="text"
-                            placeholder="Enter Team Name"
+                            placeholder="TEAM NAME"
                             value={teamName}
                             onChange={(e) => setTeamName(e.target.value)}
                             style={{
                                 width: '100%',
                                 padding: '1rem',
-                                background: 'rgba(0,0,0,0.3)',
-                                border: error ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                                background: 'rgba(255,255,255,0.05)',
+                                border: error ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
                                 fontSize: '1.1rem',
-                                textAlign: 'center'
+                                textAlign: 'center',
+                                color: 'white',
+                                letterSpacing: '0.1em',
+                                borderRadius: 'var(--radius-sm)'
                             }}
+                            autoFocus
                         />
-                        {error && <div style={{ color: 'var(--color-accent)', fontSize: '0.9rem' }}>{error}</div>}
+                        {error && <div style={{ color: 'var(--color-primary)', fontSize: '0.9rem' }}>{error}</div>}
 
                         <button
                             type="submit"
-                            style={{
-                                padding: '1rem',
-                                background: 'var(--gradient-primary)',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                fontSize: '1.1rem',
-                                borderRadius: 'var(--radius-sm)',
-                                marginTop: '1rem'
-                            }}
+                            className="hero-btn"
+                            style={{ width: '100%' }}
                         >
                             JOIN AUCTION
                         </button>

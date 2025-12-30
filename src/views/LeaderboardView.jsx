@@ -38,8 +38,8 @@ const LeaderboardView = () => {
 
     return (
         <div className="container flex-center" style={{ minHeight: '100vh', flexDirection: 'column', gap: '2rem' }}>
-            <h1 className="text-gradient" style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>FINAL RESULTS</h1>
-            <p style={{ color: 'var(--color-text-muted)', marginBottom: '3rem' }}>The auction has ended. Here are the champions.</p>
+            <h1 className="text-hero" style={{ fontSize: '5rem', marginBottom: '0.5rem' }}>FINAL RESULTS</h1>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '3rem', letterSpacing: '0.1em' }}>THE AUCTION HAS ENDED. HERE ARE THE CHAMPIONS.</p>
 
             <div className="glass-panel" style={{ width: '100%', maxWidth: '800px', padding: 0, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>

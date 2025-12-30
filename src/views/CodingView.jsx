@@ -44,21 +44,18 @@ const CodingView = () => {
         return (
             <div className="container" style={{ padding: '2rem 1rem' }}>
                 <header className="flex-center" style={{ justifyContent: 'space-between', marginBottom: '2rem' }}>
-                    <h1 className="text-gradient">CODING PHASE</h1>
-                    <div className="glass-panel" style={{ padding: '0.5rem 1.5rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                    <h1 className="text-hero" style={{ fontSize: '2.5rem' }}>CODING PHASE</h1>
+                    <div className="glass-panel" style={{ padding: '0.8rem 2rem', display: 'flex', gap: '2rem', alignItems: 'center', borderRadius: 'var(--radius-full)' }}>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>TIME REMAINING</div>
-                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: state.auction.codingTimer < 300 ? 'var(--color-accent)' : 'var(--color-primary)' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>TIME REMAINING</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', lineHeight: 1, color: state.auction.codingTimer < 300 ? 'var(--color-primary)' : 'white' }}>
                                 {formatTime(state.auction.codingTimer)}
                             </div>
                         </div>
+                        <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }}></div>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>SCORE</div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{user.score || 0}</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>WALLET</div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--color-success)' }}>{user.wallet}</div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', letterSpacing: '0.1em' }}>SCORE</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', lineHeight: 1, color: 'var(--color-success)' }}>{user.score || 0}</div>
                         </div>
                     </div>
                 </header>

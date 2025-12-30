@@ -225,13 +225,9 @@ export const AuctionProvider = ({ children }) => {
   const [state, dispatch] = useReducer(auctionReducer, initialState);
 
   // Timer Logic
+  // Timer Logic - TRANSITIONS ONLY (Ticks are driven by Admin)
   useEffect(() => {
-    let timer;
-    if (state.appStatus === 'AUCTION' && state.auction.timeLeft > 0) {
-      timer = setInterval(() => {
-        dispatch({ type: ACTIONS.TICK });
-      }, 1000);
-    } else if (state.appStatus === 'AUCTION' && state.auction.timeLeft === 0) {
+    if (state.appStatus === 'AUCTION' && state.auction.timeLeft === 0) {
       // Problem Ended
       dispatch({ type: ACTIONS.END_PROBLEM });
 
@@ -239,35 +235,34 @@ export const AuctionProvider = ({ children }) => {
       setTimeout(() => {
         dispatch({ type: ACTIONS.NEXT_PROBLEM });
       }, 5000); // 5s gap
-    } else if (state.appStatus === 'CODING' && state.auction.codingTimer > 0) {
-      // Coding Phase Timer
-      timer = setInterval(() => {
-        dispatch({ type: ACTIONS.TICK });
-      }, 1000);
     }
-
-    return () => clearInterval(timer);
-  }, [state.appStatus, state.auction.timeLeft, state.auction.codingTimer]);
+  }, [state.appStatus, state.auction.timeLeft]);
 
   // --- BROADCAST CHANNEL (Cross-Tab Sync) ---
-  useEffect(() => {
-    const channel = new BroadcastChannel('codebid_sync');
+  const channelRef = React.useRef(null);
 
-    channel.onmessage = (event) => {
+  useEffect(() => {
+    channelRef.current = new BroadcastChannel('codebid_sync');
+
+    channelRef.current.onmessage = (event) => {
       // Receive action from other tab
       console.log('Received sync action:', event.data);
       dispatch(event.data);
     };
 
-    return () => channel.close();
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.close();
+      }
+    };
   }, []);
 
   // Helper to dispatch locally AND broadcast
   const broadcastAction = (action) => {
     dispatch(action);
-    const channel = new BroadcastChannel('codebid_sync');
-    channel.postMessage(action);
-    channel.close();
+    if (channelRef.current) {
+      channelRef.current.postMessage(action);
+    }
   };
 
   // Admin Actions (Synced)
@@ -300,7 +295,8 @@ export const AuctionProvider = ({ children }) => {
     startCoding: () => broadcastAction({ type: ACTIONS.START_CODING }), // Synced
     skipToCoding: () => dispatch({ type: 'SKIP_TO_CODING' }),
     login: (name) => dispatch({ type: ACTIONS.LOGIN, payload: { name } }),
-    endEvent: () => broadcastAction({ type: ACTIONS.END_EVENT }) // Synced
+    endEvent: () => broadcastAction({ type: ACTIONS.END_EVENT }), // Synced
+    broadcastTick: () => broadcastAction({ type: ACTIONS.TICK })
   };
 
   return (
